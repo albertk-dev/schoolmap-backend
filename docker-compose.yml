@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    container_name: schoolmap_postgres-container
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: geo_db
+    ports:
+      - "5434:5432"
+    networks:
+      network:
+        ipv4_address: 192.168.105.10
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: schoolmap_pgadmin-container
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: root@domain.com
+      PGADMIN_DEFAULT_PASSWORD: root
+    ports:
+      - "5054:80"
+    depends_on:
+      - postgres
+    networks:
+      network:
+        ipv4_address: 192.168.105.11
+
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.26.2
+    container_name: schoolmap_geoserver-container
+    restart: always
+    ports:
+      - "8084:8080"
+    depends_on:
+      - postgres
+    networks:
+      network:
+        ipv4_address: 192.168.105.12
+    volumes:
+      - geoserver_data:/var/geoserver
+
+volumes:
+  pg_data:
+  geoserver_data:
+
+networks:
+  network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.105.0/24
