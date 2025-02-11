@@ -1,6 +1,7 @@
 package com.albertk.schoolmap.configuration;
 
 import com.albertk.schoolmap.security.JwtFilter;
+import com.albertk.schoolmap.security.JwtUtil;
 import com.albertk.schoolmap.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +22,16 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurityConfig  {
 
-    private final JwtFilter jwtFilter;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtFilter jwtFilter(UserService userService, JwtUtil jwtUtil) {
+        return new JwtFilter(jwtUtil, userService);
     }
 
     @Bean
@@ -39,6 +45,7 @@ public class SecurityConfig  {
                         // !!!ici si j'écrit ROLE_ADMIN se sera interpréter comme ROLE_ROLE_ADMIN
                         .requestMatchers("/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/schools").hasAnyRole("ADMIN", "DATA_COLLECTOR")
+                        .requestMatchers(HttpMethod.POST, "/schools/**").hasAnyRole("ADMIN", "DATA_COLLECTOR")
                         .requestMatchers(HttpMethod.PUT, "/schools/**").hasAnyRole("ADMIN", "DATA_COLLECTOR")
                         .requestMatchers(HttpMethod.DELETE, "/schools/**").hasRole("ADMIN")
 

@@ -40,10 +40,10 @@ public class UserService implements UserDetailsService {
         return passwordEncoder;
     }
 
-    public UserDetails getAuthenticatedUser() {
+    public User getAuthenticatedUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            return ((UserDetails) authentication.getPrincipal());
+            return this.getUserByEmail( ((UserDetails) authentication.getPrincipal()).getUsername());
         }
         return null;
     }

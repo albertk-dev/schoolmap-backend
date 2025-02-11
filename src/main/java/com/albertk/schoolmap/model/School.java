@@ -1,13 +1,14 @@
 package com.albertk.schoolmap.model;
 
-
-
-
 import com.albertk.schoolmap.types.SchoolCategory;
 import com.albertk.schoolmap.types.SchoolType;
 import com.albertk.schoolmap.types.TeachingLanguage;
 import jakarta.persistence.*;
 import lombok.*;
+import org.locationtech.jts.geom.Point;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.hibernate.annotations.Type;
 
 import java.time.LocalDateTime;
 
@@ -56,9 +57,20 @@ public class School {
 
     private LocalDateTime createdAt;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
-}
+    @Column(columnDefinition = "geometry(Point, 4326)")
+    private Point geom;
 
+    @PrePersist
+    @PreUpdate
+    private void generateGeom() {
+        if (latitude != null && longitude != null) {
+            GeometryFactory geometryFactory = new GeometryFactory();
+            this.geom = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+        }
+
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
+
+}

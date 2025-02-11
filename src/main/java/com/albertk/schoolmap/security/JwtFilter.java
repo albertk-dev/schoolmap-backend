@@ -1,6 +1,5 @@
 package com.albertk.schoolmap.security;
 
-import com.albertk.schoolmap.model.User;
 import com.albertk.schoolmap.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,14 +19,15 @@ import java.io.IOException;
 public class JwtFilter extends OncePerRequestFilter {
 
 
-    private JwtUtil jwtUtil;
+    private final JwtUtil jwtUtil;
 
-    private UserService userService;
+    private final UserService userService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
+        System.out.println(authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             chain.doFilter(request, response);

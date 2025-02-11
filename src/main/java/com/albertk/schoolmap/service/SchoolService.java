@@ -4,6 +4,7 @@ import com.albertk.schoolmap.dto.SchoolDTO;
 import com.albertk.schoolmap.exception.ResourceNotFoundException;
 import com.albertk.schoolmap.mapper.SchoolMapper;
 import com.albertk.schoolmap.model.School;
+import com.albertk.schoolmap.model.User;
 import com.albertk.schoolmap.repository.SchoolRepository;
 import com.albertk.schoolmap.response.ApiResponse;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -21,6 +24,7 @@ import java.util.stream.Collectors;
 public class SchoolService {
 
     private final SchoolRepository schoolRepository;
+    private final UserService userService;
 
     public ApiResponse<SchoolDTO> getSchoolById(Long id) {
         School school = schoolRepository.findById(id)
@@ -48,9 +52,38 @@ public class SchoolService {
     }
 
     public ApiResponse<SchoolDTO> createSchool(School school) {
+        school.setCreatedBy(userService.getAuthenticatedUser());
         School savedSchool = schoolRepository.save(school);
         return ApiResponse.success(SchoolMapper.toDTO(savedSchool), "School created successfully");
     }
+
+    public ApiResponse<Set<SchoolDTO>> createManySchool(School[] data) {
+        // Convertir le tableau en liste
+        List<School> schools = Arrays.asList(data);
+
+        // Récupérer l'utilisateur authentifié une seule fois
+        User authenticatedUser = userService.getAuthenticatedUser();
+        if (authenticatedUser == null) {
+            throw new IllegalStateException("No authenticated user found.");
+        }
+
+        // Filtrer et définir le createdBy pour chaque école
+        List<School> validSchools = schools.stream()
+                .filter(school -> school.getName() != null && school.getLatitude() != null && school.getLongitude() != null)
+                .peek(school -> school.setCreatedBy(authenticatedUser)) // Mutation directe
+                .toList();
+
+        // Sauvegarder toutes les écoles valides
+        List<School> savedSchools = schoolRepository.saveAll(validSchools);
+
+        // Mapper les écoles sauvegardées en DTO
+        Set<SchoolDTO> schoolDTOs = savedSchools.stream()
+                .map(SchoolMapper::toDTO)
+                .collect(Collectors.toSet());
+
+        return ApiResponse.success(schoolDTOs, "Schools created successfully");
+    }
+
 
     public ApiResponse<SchoolDTO> updateSchool(Long id, School updatedSchool) {
         School school = schoolRepository.findById(id)

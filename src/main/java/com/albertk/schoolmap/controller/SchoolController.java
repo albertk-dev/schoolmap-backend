@@ -43,5 +43,11 @@ public class SchoolController {
         return ResponseEntity.status(HttpStatus.OK).body(schoolService.deleteSchool(id));
     }
 
+    @PostMapping("many")
+    public ResponseEntity<ApiResponse<?>> addManySchool(@RequestBody School[] data){
+        System.out.println("insert Many data");
+        return ResponseEntity.status(HttpStatus.CREATED).body(schoolService.createManySchool(data));
+    }
+
 
 }
